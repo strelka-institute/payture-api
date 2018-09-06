@@ -20,7 +20,6 @@
     "prewatch": "npm run cleanup",
     "test": "run-s test:*",
     "test:unit": "ava test",
-    "test:types": "flow check",
     "test:lint": "eslint src test",
     "deploy": "np --no-cleanup",
     "cleanup": "rimraf lib",
@@ -37,13 +36,7 @@
   },
   "eslintConfig": {
     "parser": "babel-eslint",
-    "extends": [
-      "standard",
-      "plugin:flowtype/recommended"
-    ],
-    "plugins": [
-      "flowtype"
-    ],
+    "extends": "standard",
     "rules": {
       "no-shadow": 2
     }
@@ -62,7 +55,6 @@
     "@babel/core": "^7.0.0",
     "@babel/plugin-proposal-object-rest-spread": "^7.0.0",
     "@babel/preset-env": "^7.0.0",
-    "@babel/preset-flow": "^7.0.0",
     "@babel/register": "^7.0.0",
     "auto-changelog": "^1.8.0",
     "ava": "^1.0.0-beta.8",
@@ -71,7 +63,6 @@
     "eslint": "^5.4.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-config-standard-react": "^7.0.2",
-    "eslint-plugin-flowtype": "^2.50.0",
     "eslint-plugin-import": "^2.14.0",
     "eslint-plugin-node": "^7.0.1",
     "eslint-plugin-promise": "^4.0.0",
