@@ -1,7 +1,6 @@
 const axios = require('axios')
 
 const {
-  extend,
   encodeBase64,
   json,
   parseXML,
@@ -19,8 +18,11 @@ const {
   ROUTE_STATUS
 } = require('./constants')
 
+const isError = (data) =>
+  data.Success === SUCCESS_FALSE && data.ErrCode !== ERROR_CODE_NONE
+
 const paytureApi = (opts) => {
-  const options = extend(DEFAULT_OPTIONS, opts)
+  const options = { ...DEFAULT_OPTIONS, ...opts }
 
   const api = axios.create({
     baseURL: options.host,
@@ -32,21 +34,27 @@ const paytureApi = (opts) => {
   api.interceptors.request.use((config) => {
     if (config.method === 'post') {
       if (config.data.Data) {
-        return extend(config, {
+        return {
+          ...config,
           data: serialize({
             Key: options.merchant,
             Data: serialize(config.data.Data, '; ')
           })
-        })
+        }
       }
 
-      return extend(config, { data: serialize(config.data) })
+      return {
+        ...config,
+        data: serialize(config.data)
+      }
     } else if (config.method === 'get') {
-      return extend(config, {
-        data: serialize(extend({
-          Key: options.merchant
-        }, config.data))
-      })
+      return {
+        ...config,
+        data: serialize({
+          Key: options.merchant,
+          ...config.data
+        })
+      }
     }
 
     return config
@@ -59,7 +67,7 @@ const paytureApi = (opts) => {
       return parseXML(res.data)
         .then((node) => node.attributes)
         .then((data) => {
-          if (data.Success === SUCCESS_FALSE && data.ErrCode !== ERROR_CODE_NONE) {
+          if (isError(data)) {
             return Promise.reject(new Error(data.ErrCode))
           }
 
@@ -82,20 +90,22 @@ const paytureApi = (opts) => {
 }
 
 const createPaytureApi = (opts) => {
-  const options = extend(DEFAULT_OPTIONS, opts)
+  const options = { ...DEFAULT_OPTIONS, ...opts }
   const api = paytureApi(options)
 
   const init = (data) =>
     api.post(ROUTE_INIT, {
-      Data: extend(
-        { SessionType: 'Pay', Url: options.returnUrl },
-        data,
-        data.Cheque != null && {
-          Cheque: encodeBase64(json(extend({
-            CustomerContact: options.chequeContactEmail
-          }, data.Cheque)))
+      Data: {
+        SessionType: 'Pay',
+        Url: options.returnUrl,
+        ...data,
+        ...data.Cheque != null && {
+          Cheque: encodeBase64(json({
+            CustomerContact: options.chequeContactEmail,
+            ...data.Cheque
+          }))
         }
-      )
+      }
     }).then((res) => ({
       OrderId: res.OrderId,
       Amount: res.Amount,
@@ -127,25 +137,33 @@ const createPaytureApi = (opts) => {
     amount: Amount,
     product: Product,
     session: Session,
-    customParams: rest != null
-      ? json(rest)
-      : null,
-    chequeParams: Cheque != null
-      ? json(extend({ CustomerContact: options.chequeContactEmail }, Cheque))
-      : null
+    customParams: rest == null ? null : json(rest),
+    chequeParams: Cheque == null ? null : json({
+      CustomerContact: options.chequeContactEmail,
+      ...Cheque
+    })
   })}`
 
+  const notificationStatus = (data) => {
+    const nextData = {
+      TransactionDate: new Date(data.TransactionDate),
+      ...data
+    }
+
+    if (isError(nextData)) {
+      return Promise.reject(nextData)
+    }
+
+    return Promise.resolve(nextData)
+  }
+
   return {
-    api,
-    get: api.get,
-    patch: api.patch,
-    post: api.post,
-    put: api.put,
-    delete: api.delete,
+    axios: api,
     init,
     pay,
     status,
-    widget
+    widget,
+    notificationStatus
   }
 }
 

@@ -78,7 +78,7 @@ test('Widget', async (t) => {
     }
   })
 
-  const page = await api.get(widgetUrl)
+  const page = await api.axios.get(widgetUrl)
 
   t.true(typeof page.html === 'string' && page.html.length > 0)
 })

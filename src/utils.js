@@ -1,8 +1,6 @@
 const xmlLibrary = require('xml-library')
 const { IS_SERVER } = require('./constants')
 
-const extend = (...args) => Object.assign({}, ...args)
-
 const encodeBase64 = (src) => IS_SERVER
   ? Buffer.from(src).toString('base64')
   : window.btoa(src)
@@ -34,7 +32,6 @@ const serialize = (obj, separator = '&') =>
     .join(separator)
 
 module.exports = {
-  extend,
   encodeBase64,
   decodeBase64,
   json,
