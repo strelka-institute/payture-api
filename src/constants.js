@@ -17,9 +17,9 @@ const WIDGET_ERROR = 'CLOSE_PAYTURE_WIDGET_ERROR'
 
 const DEFAULT_OPTIONS = {
   host: SANDBOX_HOST,
-  chequeContactEmail: 'web@example.com',
-  returnUrl: 'http://example.com?orderid={orderid}&result={success}',
   merchant: 'Merchant',
+  returnUrl: 'http://example.com?orderid={orderid}&result={success}',
+  chequeContactEmail: 'web@example.com',
   widgetHost: WIDGET_HOST,
   widgetDomain: 2
 }

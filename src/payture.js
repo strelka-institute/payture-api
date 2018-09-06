@@ -89,19 +89,57 @@ const paytureApi = (opts) => {
   return api
 }
 
-const createPaytureApi = (opts) => {
-  const options = { ...DEFAULT_OPTIONS, ...opts }
-  const api = paytureApi(options)
+/**
+ * Create Payture API
+ *
+ * @param {object} [options]
+ * @param {string} [options.host=https://sandbox.payture.com] — Host of your payture account
+ * @param {string} [options.merchant=Merchant] — Your merchant account
+ * @param {string} [options.returnUrl] — Url to return visitors after payment complete
+ * @param {string} [options.chequeContactEmail] — Contact email for cheques
+ * @param {string} [options.widgetHost=https://merchantgateway.payture.com] — Payture widget template host
+ * @param {string} [options.widgetDomain=2] — [Widget domain](https://payture.com/api#widget-docs_widget-params_) (use `1` for production)
+ *
+ * @returns {methods}
+ */
+
+const createPaytureApi = (options) => {
+  const opts = { ...DEFAULT_OPTIONS, ...options }
+  const api = paytureApi(opts)
+
+  /**
+   * Create [Payture InPay](https://payture.com/api#inpay_) session.
+   *
+   * **See [Payture InPay Docs](https://payture.com/api#inpay_init_)**
+   *
+   * @param {object} [data]
+   * @param {string|number} [data.OrderId] — Unique order id
+   * @param {string|number} [data.Amount] — Total price in kopeck (1000 is 10.00₽)
+   * @param {string} [data.Product] — Product name (visible to user)
+   * @param {string} [data.Description] — Order description
+   * @param {string} [data.Language] — Order page language `EN` or `RU`
+   * @param {object} [data.Cheque] — [Cheque](https://payture.com/api#kassy-fz54_cheque-format-with-payment_) to send (optional)
+   * @param {number} [data.Cheque.Message] — Order description
+   * @param {object[]} [data.Cheque.Positions] — Order Items
+   * @param {number} [data.Cheque.Positions.Quantity] — Quantity
+   * @param {number} [data.Cheque.Positions.Price] — Price in kopeck
+   * @param {number} [data.Cheque.Positions.Tax] — [Tax system](https://payture.com/api#kassy-fz54_cheque-status_) code for item
+   * @param {string} [data.Cheque.Positions.Text] — Item description
+   * @param {string} [data.Cheque.CheckClose]
+   * @param {number} [data.Cheque.CheckClose.TaxationSystem] — [Tax system](https://payture.com/api#kassy-fz54_cheque-status_) code for order
+   *
+   * @return {Promise<object>} with `OrderId`, `Amount`, `SessionId`, `PaymentUrl`
+   */
 
   const init = (data) =>
     api.post(ROUTE_INIT, {
       Data: {
         SessionType: 'Pay',
-        Url: options.returnUrl,
+        Url: opts.returnUrl,
         ...data,
         ...data.Cheque != null && {
           Cheque: encodeBase64(json({
-            CustomerContact: options.chequeContactEmail,
+            CustomerContact: opts.chequeContactEmail,
             ...data.Cheque
           }))
         }
@@ -110,7 +148,7 @@ const createPaytureApi = (opts) => {
       OrderId: res.OrderId,
       Amount: res.Amount,
       SessionId: res.SessionId,
-      PaymentUrl: options.host + ROUTE_PAY + '?SessionId=' + res.SessionId
+      PaymentUrl: opts.host + ROUTE_PAY + '?SessionId=' + res.SessionId
     }))
 
   const status = (OrderId) =>
@@ -124,14 +162,14 @@ const createPaytureApi = (opts) => {
     })
 
   const widget = ({
-    Domain = options.widgetDomain,
-    Key = options.merchant,
+    Domain = opts.widgetDomain,
+    Key = opts.merchant,
     Amount,
     Product,
     Cheque,
     Session,
     ...rest
-  }) => `${options.widgetHost}?${serialize({
+  }) => `${opts.widgetHost}?${serialize({
     domain: Domain,
     key: Key,
     amount: Amount,
@@ -139,7 +177,7 @@ const createPaytureApi = (opts) => {
     session: Session,
     customParams: rest == null ? null : json(rest),
     chequeParams: Cheque == null ? null : json({
-      CustomerContact: options.chequeContactEmail,
+      CustomerContact: opts.chequeContactEmail,
       ...Cheque
     })
   })}`
