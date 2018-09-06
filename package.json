@@ -90,7 +90,6 @@
   "dependencies": {
     "axios": "^0.18.0",
     "nanoid": "^1.2.3",
-    "qs": "^6.5.2",
     "xml-library": "^0.0.3"
   }
 }
