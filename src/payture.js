@@ -2,13 +2,14 @@ const axios = require('axios')
 
 const {
   extend,
-  base64,
+  encodeBase64,
   json,
   parseXML,
   serialize
 } = require('./utils')
 
 const {
+  WIDGET_ERROR,
   DEFAULT_OPTIONS,
   SUCCESS_TRUE,
   SUCCESS_FALSE,
@@ -52,7 +53,9 @@ const paytureApi = (opts) => {
   })
 
   api.interceptors.response.use((res) => {
-    if (res.headers['content-type'].indexOf('text/xml') === 0) {
+    const contentType = res.headers['content-type']
+
+    if (contentType.indexOf('text/xml') === 0) {
       return parseXML(res.data)
         .then((node) => node.attributes)
         .then((data) => {
@@ -62,6 +65,14 @@ const paytureApi = (opts) => {
 
           return data
         })
+    } else if (contentType.indexOf('text/html') === 0) {
+      if (res.data.indexOf(WIDGET_ERROR) !== -1) {
+        return Promise.reject(new Error(WIDGET_ERROR))
+      }
+
+      return {
+        html: res.data
+      }
     }
 
     return res.data
@@ -80,7 +91,7 @@ const createPaytureApi = (opts) => {
         { SessionType: 'Pay', Url: options.returnUrl },
         data,
         data.Cheque != null && {
-          Cheque: base64(json(extend({
+          Cheque: encodeBase64(json(extend({
             CustomerContact: options.chequeContactEmail
           }, data.Cheque)))
         }
@@ -89,7 +100,7 @@ const createPaytureApi = (opts) => {
       OrderId: res.OrderId,
       Amount: res.Amount,
       SessionId: res.SessionId,
-      RedirectUrl: options.host + ROUTE_PAY + '?SessionId=' + res.SessionId
+      PaymentUrl: options.host + ROUTE_PAY + '?SessionId=' + res.SessionId
     }))
 
   const status = (OrderId) =>
@@ -97,13 +108,44 @@ const createPaytureApi = (opts) => {
       .then((res) => res.Success === SUCCESS_TRUE)
 
   const pay = (SessionId) =>
-    api.post(ROUTE_PAY, { SessionId })
+    api.post(ROUTE_PAY, { SessionId }, {
+      maxRedirects: 0,
+      validateStatus: null
+    })
+
+  const widget = ({
+    Domain = options.widgetDomain,
+    Key = options.merchant,
+    Amount,
+    Product,
+    Cheque,
+    Session,
+    ...rest
+  }) => `${options.widgetHost}?${serialize({
+    domain: Domain,
+    key: Key,
+    amount: Amount,
+    product: Product,
+    session: Session,
+    customParams: rest != null
+      ? json(rest)
+      : null,
+    chequeParams: Cheque != null
+      ? json(extend({ CustomerContact: options.chequeContactEmail }, Cheque))
+      : null
+  })}`
 
   return {
     api,
+    get: api.get,
+    patch: api.patch,
+    post: api.post,
+    put: api.put,
+    delete: api.delete,
     init,
     pay,
-    status
+    status,
+    widget
   }
 }
 

@@ -10,12 +10,18 @@ const ROUTE_PAY = ROUTE_INPAY + '/Pay'
 const ROUTE_STATUS = ROUTE_INPAY + '/PayStatus'
 
 const SANDBOX_HOST = 'https://sandbox.payture.com'
+const WIDGET_HOST = 'https://merchantgateway.payture.com'
+
+const WIDGET_SUCCESS = 'CLOSE_PAYTURE_WIDGET_SUCCESS'
+const WIDGET_ERROR = 'CLOSE_PAYTURE_WIDGET_ERROR'
 
 const DEFAULT_OPTIONS = {
   host: SANDBOX_HOST,
   chequeContactEmail: 'web@example.com',
   returnUrl: 'http://example.com?orderid={orderid}&result={success}',
-  merchant: 'Merchant'
+  merchant: 'Merchant',
+  widgetHost: WIDGET_HOST,
+  widgetDomain: 2
 }
 
 module.exports = {
@@ -27,5 +33,7 @@ module.exports = {
   ERROR_CODE_NONE,
   ROUTE_INIT,
   ROUTE_PAY,
-  ROUTE_STATUS
+  ROUTE_STATUS,
+  WIDGET_SUCCESS,
+  WIDGET_ERROR
 }

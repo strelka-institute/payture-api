@@ -2,6 +2,7 @@
 temp
 # Builds
 dist
+lib
 # Private "config" files/folders
 private
 config/production*
