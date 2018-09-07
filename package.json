@@ -1,6 +1,6 @@
 {
   "name": "@strelka/payture-api",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Payture InPay API",
   "repository": "git@github.com:strelka-institute/payture.git",
   "author": "John Grishin <hi@exah.me>",
