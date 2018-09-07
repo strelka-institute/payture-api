@@ -189,13 +189,15 @@ Works in browser. Resolves promise if payment is succesful and rejects on error.
 ```
 
 ```javascript
-widgetStatus()
+const status = widgetStatus()
  .then((event) => {
    // Success: event.data === 'CLOSE_PAYTURE_WIDGET_SUCCESS'
  })
  .catch((event) => {
    // Error: : event.data === 'CLOSE_PAYTURE_WIDGET_ERROR'
  })
+
+status.cancel() // Cancel promise and stop listening for widget events
 ```
 
 Returns **[Promise][27]** `status`

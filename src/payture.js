@@ -291,13 +291,15 @@ const createPaytureApi = (options) => {
    *
    * @example
    *
-   * widgetStatus()
+   * const status = widgetStatus()
    *  .then((event) => {
    *    // Success: event.data === 'CLOSE_PAYTURE_WIDGET_SUCCESS'
    *  })
    *  .catch((event) => {
    *    // Error: : event.data === 'CLOSE_PAYTURE_WIDGET_ERROR'
    *  })
+   *
+   * status.cancel() // Cancel promise and stop listening for widget events
    */
 
   const widgetStatus = () => {
