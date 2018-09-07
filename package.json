@@ -1,11 +1,10 @@
 {
-  "name": "@strelka/payture",
+  "name": "@strelka/payture-api",
   "version": "0.0.0",
-  "description": "",
+  "description": "Payture InPay API",
   "repository": "git@github.com:strelka-institute/payture.git",
   "author": "John Grishin <hi@exah.me>",
   "license": "MIT",
-  "private": true,
   "sideEffects": false,
   "main": "lib/index.js",
   "files": [
