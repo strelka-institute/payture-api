@@ -31,10 +31,23 @@ const serialize = (obj, separator = '&') =>
     }, [])
     .join(separator)
 
+const createDeferredPromise = () => {
+  const result = {}
+
+  result.promise = new Promise((resolve, reject) => {
+    result.resolve = resolve
+    result.reject = reject
+    result.cancel = () => resolve(new Promise(() => null))
+  })
+
+  return result
+}
+
 module.exports = {
   encodeBase64,
   decodeBase64,
   json,
   parseXML,
-  serialize
+  serialize,
+  createDeferredPromise
 }

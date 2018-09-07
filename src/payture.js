@@ -4,10 +4,13 @@ const {
   encodeBase64,
   json,
   parseXML,
-  serialize
+  serialize,
+  createDeferredPromise
 } = require('./utils')
 
 const {
+  IS_SERVER,
+  WIDGET_SUCCESS,
   WIDGET_ERROR,
   DEFAULT_OPTIONS,
   SUCCESS_TRUE,
@@ -287,12 +290,64 @@ const createPaytureApi = (options) => {
     return Promise.resolve(nextData)
   }
 
+  /**
+   * Watch for [widget order status](https://payture.com/api#widget-docs_workflow_).
+   * Works in browser. Resolves promise if payment is succesful and rejects on error.
+   *
+   * @return {Promise} `status`
+   * @return {function} `status.cancel` — cancel promise and stop event listener
+   *
+   * @example
+   *
+   * <iframe src={widgetSrc} frameBorder={0} onLoad={handleWidgetLoad} />
+   *
+   * @example
+   *
+   * widgetStatus()
+   *  .then((event) => {
+   *    // Success: event.data === 'CLOSE_PAYTURE_WIDGET_SUCCESS'
+   *  })
+   *  .catch((event) => {
+   *    // Error: : event.data === 'CLOSE_PAYTURE_WIDGET_ERROR'
+   *  })
+   */
+
+  const widgetStatus = () => {
+    if (IS_SERVER) {
+      return Promise.reject(new Error('This function must be used in browser'))
+    }
+
+    const p = createDeferredPromise()
+
+    function handleWigetEvent (event) {
+      if (event.data === WIDGET_SUCCESS) {
+        p.resolve(event)
+        destroyEvent()
+      } else if (event.data === WIDGET_ERROR) {
+        p.reject(event)
+        destroyEvent()
+      }
+    }
+
+    window.addEventListener('message', handleWigetEvent)
+    const destroyEvent = () => window.removeEventListener('message', handleWigetEvent)
+
+    function cancel () {
+      destroyEvent()
+      p.cancel()
+      return p.promise
+    }
+
+    return Object.assign(p.promise, { cancel })
+  }
+
   return {
     axios: api,
     init,
     pay,
     status,
     getWidgetUrl,
+    widgetStatus,
     serverNotification
   }
 }
