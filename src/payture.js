@@ -310,18 +310,21 @@ const createPaytureApi = (options) => {
     function handleWigetEvent (event) {
       if (event.data === WIDGET_SUCCESS) {
         p.resolve(event)
-        destroyEvent()
+        removeEventListener()
       } else if (event.data === WIDGET_ERROR) {
         p.reject(event)
-        destroyEvent()
+        removeEventListener()
       }
     }
 
     window.addEventListener('message', handleWigetEvent)
-    const destroyEvent = () => window.removeEventListener('message', handleWigetEvent)
+
+    function removeEventListener () {
+      window.removeEventListener('message', handleWigetEvent)
+    }
 
     function cancel () {
-      destroyEvent()
+      removeEventListener()
       p.cancel()
       return p.promise
     }
