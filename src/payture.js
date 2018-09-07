@@ -149,7 +149,7 @@ const createPaytureApi = (options) => {
    * @param {number} [data.Cheque.CheckClose.TaxationSystem] — [Tax system](https://payture.com/api#kassy-fz54_cheque-status_) code for order
    *
    * @return {Promise<object>} — with `{ OrderId, Amount, SessionId, PaymentUrl }`
-   * @return {Promise<Error>} — with [Payture Error Code](https://payture.com/api#error-codes_) in message
+   * @return {Promise<Error>} — with [Payture `ErrorCode`](https://payture.com/api#error-codes_) in message
    *
    * @example
    * api.init({
@@ -195,7 +195,7 @@ const createPaytureApi = (options) => {
    * @return {object} `result`
    * @return {boolean} `result.isPaid` — Parsed order payment status
    * @return {object} `result.raw` — Raw result from Payture
-   * @return {Promise<Error>} — with [Payture Error Code](https://payture.com/api#error-codes_) in message
+   * @return {Promise<Error>} — with [Payture `ErrorCode`](https://payture.com/api#error-codes_) in message
    *
    * @example
    *
@@ -277,19 +277,6 @@ const createPaytureApi = (options) => {
     })
   })}`
 
-  const serverNotification = (data = {}) => {
-    const nextData = {
-      TransactionDate: new Date(data.TransactionDate),
-      ...data
-    }
-
-    if (isError(nextData)) {
-      return Promise.reject(nextData)
-    }
-
-    return Promise.resolve(nextData)
-  }
-
   /**
    * Watch for [widget order status](https://payture.com/api#widget-docs_workflow_).
    * Works in browser. Resolves promise if payment is succesful and rejects on error.
@@ -339,6 +326,43 @@ const createPaytureApi = (options) => {
     }
 
     return Object.assign(p.promise, { cancel })
+  }
+
+  /**
+   * Check [Payture Server Notification](https://payture.com/api#notifications_).
+   * Resolves promise with data on success and rejects [Payture `ErrorCode`](https://payture.com/api#error-codes_) on error.
+   *
+   * @param {object} [data] Parsed server POST body
+   * @return {Promise}
+   *
+   * @example
+   * const express = require('express')
+   * const bodyParser = require('body-parser')
+   * const paytureApi = require('@strelka/payture-api')()
+   *
+   * app.use(bodyParser.json())
+   * app.use('/payture/notification', (req, res) => {
+   *   paytureApi.serverNotification(req.body)
+   *    .then((data) => {
+   *      // Payment successful
+   *    })
+   *    .catch((error) => {
+   *      // Something wrong happend
+   *    })
+   * })
+   */
+
+  const serverNotification = (data = {}) => {
+    const nextData = {
+      TransactionDate: new Date(data.TransactionDate),
+      ...data
+    }
+
+    if (isError(nextData)) {
+      return Promise.reject(new Error(nextData.ErrCode))
+    }
+
+    return Promise.resolve(nextData)
   }
 
   return {
