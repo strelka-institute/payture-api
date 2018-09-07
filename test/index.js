@@ -19,7 +19,9 @@ test('API Init', async (t) => {
   t.is(res.OrderId, OrderId)
   t.true(res.SessionId != null)
   t.true(res.PaymentUrl != null)
-  t.false(await api.status(OrderId))
+
+  const status = await api.status(OrderId)
+  t.false(status.isPaid)
 })
 
 test('API Cheque Init', async (t) => {
@@ -48,18 +50,21 @@ test('API Cheque Init', async (t) => {
   t.is(res.OrderId, OrderId)
   t.true(res.SessionId != null)
   t.true(res.PaymentUrl != null)
-  t.false(await api.status(OrderId))
+
+  const status = await api.status(OrderId)
+  t.false(status.isPaid)
 
   const page = await api.pay(res.SessionId)
   t.true(typeof page.html === 'string' && page.html.length > 0)
 })
 
 test('API Status', async (t) => {
-  t.true(await api.status(PAID_ORDER_ID))
+  const status = await api.status(PAID_ORDER_ID)
+  t.true(status.isPaid)
 })
 
 test('Widget', async (t) => {
-  const widgetUrl = api.widget({
+  const widgetUrl = api.getWidgetUrl({
     Amount: 50000,
     Product: 'ticket',
     Description: 'MyTestTransaction',

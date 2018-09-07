@@ -90,7 +90,9 @@ const paytureApi = (opts) => {
 }
 
 /**
- * Create Payture API
+ * Create Payture InPay API.
+ *
+ * **See [Payture InPay Docs](https://payture.com/api#inpay_)**
  *
  * @param {object} [options]
  * @param {string} [options.host=https://sandbox.payture.com] — Host of your payture account
@@ -100,7 +102,24 @@ const paytureApi = (opts) => {
  * @param {string} [options.widgetHost=https://merchantgateway.payture.com] — Payture widget template host
  * @param {string} [options.widgetDomain=2] — [Widget domain](https://payture.com/api#widget-docs_widget-params_) (use `1` for production)
  *
- * @returns {methods}
+ * @returns {api}
+ *
+ * @example
+ * const createPaytureApi = require('@strelka/payture-api')
+ *
+ * const api = createPaytureApi({
+ *   host: 'https://sandbox.payture.com',
+ *   merchant: 'Merchant',
+ *   returnUrl: 'http://example.com?orderid={orderid}&result={success}',
+ *   chequeContactEmail: 'billing@example.com',
+ *   widgetDomain: 1
+ * })
+ *
+ * // api.init(data)
+ * // api.status(OrderId)
+ * // api.pay(SessionId)
+ * // api.widget(data)
+ * // api.notificationStatus(res.body)
  */
 
 const createPaytureApi = (options) => {
@@ -108,13 +127,11 @@ const createPaytureApi = (options) => {
   const api = paytureApi(opts)
 
   /**
-   * Create [Payture InPay](https://payture.com/api#inpay_) session.
-   *
-   * **See [Payture InPay Docs](https://payture.com/api#inpay_init_)**
+   * Start [Payture InPay](https://payture.com/api#inpay_init_) session.
    *
    * @param {object} [data]
    * @param {string|number} [data.OrderId] — Unique order id
-   * @param {string|number} [data.Amount] — Total price in kopeck (1000 is 10.00₽)
+   * @param {string|number} [data.Amount] — Total price in kopeck (`1000` is `10.00₽`)
    * @param {string} [data.Product] — Product name (visible to user)
    * @param {string} [data.Description] — Order description
    * @param {string} [data.Language] — Order page language `EN` or `RU`
@@ -128,10 +145,26 @@ const createPaytureApi = (options) => {
    * @param {string} [data.Cheque.CheckClose]
    * @param {number} [data.Cheque.CheckClose.TaxationSystem] — [Tax system](https://payture.com/api#kassy-fz54_cheque-status_) code for order
    *
-   * @return {Promise<object>} with `OrderId`, `Amount`, `SessionId`, `PaymentUrl`
+   * @return {Promise<object>} — with `{ OrderId, Amount, SessionId, PaymentUrl }`
+   * @return {Promise<Error>} — with [Payture Error Code](https://payture.com/api#error-codes_) in message
+   *
+   * @example
+   * api.init({
+   *   OrderId: OrderId,
+   *   Amount: 50000,
+   *   Product: 'ticket',
+   *   Description: 'MyTestTransaction',
+   *   Language: 'EN'
+   * })
+   * .then(({ SessionId, PaymentUrl }) => {
+   *   // Somehow send PaymentUrl to user
+   * })
+   * .catch((error) => {
+   *   // ErrorCode in error.message
+   * })
    */
 
-  const init = (data) =>
+  const init = (data = {}) =>
     api.post(ROUTE_INIT, {
       Data: {
         SessionType: 'Pay',
@@ -151,9 +184,35 @@ const createPaytureApi = (options) => {
       PaymentUrl: opts.host + ROUTE_PAY + '?SessionId=' + res.SessionId
     }))
 
+  /**
+   * Check order status.
+   *
+   * @param {string} [OrderId] — Used in {@link init} order
+   *
+   * @return {object} `result`
+   * @return {boolean} `result.isPaid` — Parsed order payment status
+   * @return {object} `result.raw` — Raw result from Payture
+   * @return {Promise<Error>} — with [Payture Error Code](https://payture.com/api#error-codes_) in message
+   *
+   * @example
+   *
+   * api.status('WqNl4LDHnv5250Ng8zaTQ')
+   *  .then((res) => {
+   *    if (res.isPaid) {
+   *      // Do something
+   *    }
+   *  })
+   *  .catch((error) => {
+   *    // Payment is ended with error
+   *  })
+   */
+
   const status = (OrderId) =>
     api.get(ROUTE_STATUS, { data: { OrderId } })
-      .then((res) => res.Success === SUCCESS_TRUE)
+      .then((res) => ({
+        isPaid: res.Success === SUCCESS_TRUE,
+        raw: res
+      }))
 
   const pay = (SessionId) =>
     api.post(ROUTE_PAY, { SessionId }, {
@@ -161,7 +220,40 @@ const createPaytureApi = (options) => {
       validateStatus: null
     })
 
-  const widget = ({
+  /**
+   * Create order widget url. Url is used in `<iframe>` `src`.
+   *
+   * @param {object} [order] — See order description in {@link init}.
+   *
+   * @return {string} — Url to widget page
+   *
+   * @example
+   *
+   * const widgetSrc = api.getWidgetUrl({
+   *   Amount: 50000,
+   *   Product: 'ticket',
+   *   Description: 'MyTestTransaction',
+   *   Language: 'EN',
+   *   Cheque: {
+   *     Positions: [
+   *       {
+   *         Quantity: 1.000,
+   *         Price: 50000,
+   *         Tax: 6,
+   *         Text: 'Test Good'
+   *       }
+   *     ],
+   *     CheckClose: { TaxationSystem: 6 },
+   *     Message: 'Test Cheque Message'
+   *   }
+   * })
+   *
+   * @example
+   *
+   * <iframe src={widgetSrc} frameBorder={0} onLoad={handleWidgetLoad} />
+   */
+
+  const getWidgetUrl = ({
     Domain = opts.widgetDomain,
     Key = opts.merchant,
     Amount,
@@ -169,7 +261,7 @@ const createPaytureApi = (options) => {
     Cheque,
     Session,
     ...rest
-  }) => `${opts.widgetHost}?${serialize({
+  } = {}) => `${opts.widgetHost}?${serialize({
     domain: Domain,
     key: Key,
     amount: Amount,
@@ -182,7 +274,7 @@ const createPaytureApi = (options) => {
     })
   })}`
 
-  const notificationStatus = (data) => {
+  const serverNotification = (data = {}) => {
     const nextData = {
       TransactionDate: new Date(data.TransactionDate),
       ...data
@@ -200,8 +292,8 @@ const createPaytureApi = (options) => {
     init,
     pay,
     status,
-    widget,
-    notificationStatus
+    getWidgetUrl,
+    serverNotification
   }
 }
 

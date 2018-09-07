@@ -4,75 +4,254 @@
 
 -   [createPaytureApi][1]
     -   [Parameters][2]
--   [init][3]
-    -   [Parameters][4]
+    -   [Examples][3]
+-   [init][4]
+    -   [Parameters][5]
+    -   [Examples][6]
+-   [status][7]
+    -   [Parameters][8]
+    -   [Examples][9]
+-   [getWidgetUrl][10]
+    -   [Parameters][11]
+    -   [Examples][12]
+-   [widgetStatus][13]
+    -   [Examples][14]
 
 ## createPaytureApi
 
-Create Payture API
+Create Payture InPay API.
+
+**See [Payture InPay Docs][15]**
 
 ### Parameters
 
--   `options` **[object][5]?** 
-    -   `options.host` **[string][6]** — Host of your payture account (optional, default `https://sandbox.payture.com`)
-    -   `options.merchant` **[string][6]** — Your merchant account (optional, default `Merchant`)
-    -   `options.returnUrl` **[string][6]?** — Url to return visitors after payment complete
-    -   `options.chequeContactEmail` **[string][6]?** — Contact email for cheques
-    -   `options.widgetHost` **[string][6]** — Payture widget template host (optional, default `https://merchantgateway.payture.com`)
-    -   `options.widgetDomain` **[string][6]** — [Widget domain][7] (use `1` for production) (optional, default `2`)
+-   `options` **[object][16]?** 
+    -   `options.host` **[string][17]** — Host of your payture account (optional, default `https://sandbox.payture.com`)
+    -   `options.merchant` **[string][17]** — Your merchant account (optional, default `Merchant`)
+    -   `options.returnUrl` **[string][17]?** — Url to return visitors after payment complete
+    -   `options.chequeContactEmail` **[string][17]?** — Contact email for cheques
+    -   `options.widgetHost` **[string][17]** — Payture widget template host (optional, default `https://merchantgateway.payture.com`)
+    -   `options.widgetDomain` **[string][17]** — [Widget domain][18] (use `1` for production) (optional, default `2`)
 
-Returns **methods** 
+### Examples
+
+```javascript
+const createPaytureApi = require('@strelka/payture-api')
+
+const api = createPaytureApi({
+  host: 'https://sandbox.payture.com',
+  merchant: 'Merchant',
+  returnUrl: 'http://example.com?orderid={orderid}&result={success}',
+  chequeContactEmail: 'billing@example.com',
+  widgetDomain: 1
+})
+
+// api.init(data)
+// api.status(OrderId)
+// api.pay(SessionId)
+// api.widget(data)
+// api.notificationStatus(res.body)
+```
+
+Returns **api** 
 
 ## init
 
-Create [Payture InPay][8] session.
-
-**See [Payture InPay Docs][9]**
+Start [Payture InPay][19] session.
 
 ### Parameters
 
--   `data` **[object][5]?** 
-    -   `data.OrderId` **([string][6] \| [number][10])?** — Unique order id
-    -   `data.Amount` **([string][6] \| [number][10])?** — Total price in kopeck (1000 is 10.00₽)
-    -   `data.Product` **[string][6]?** — Product name (visible to user)
-    -   `data.Description` **[string][6]?** — Order description
-    -   `data.Language` **[string][6]?** — Order page language `EN` or `RU`
-    -   `data.Cheque` **[object][5]?** — [Cheque][11] to send (optional)
-        -   `data.Cheque.Message` **[number][10]?** — Order description
-        -   `data.Cheque.Positions` **[Array][12]&lt;[object][5]>?** — Order Items
-            -   `data.Cheque.Positions.Quantity` **[number][10]?** — Quantity
-            -   `data.Cheque.Positions.Price` **[number][10]?** — Price in kopeck
-            -   `data.Cheque.Positions.Tax` **[number][10]?** — [Tax system][13] code for item
-            -   `data.Cheque.Positions.Text` **[string][6]?** — Item description
-        -   `data.Cheque.CheckClose` **[string][6]?** 
-            -   `data.Cheque.CheckClose.TaxationSystem` **[number][10]?** — [Tax system][13] code for order
+-   `data` **[object][16]?**  (optional, default `{}`)
+    -   `data.OrderId` **([string][17] \| [number][20])?** — Unique order id
+    -   `data.Amount` **([string][17] \| [number][20])?** — Total price in kopeck (`1000` is `10.00₽`)
+    -   `data.Product` **[string][17]?** — Product name (visible to user)
+    -   `data.Description` **[string][17]?** — Order description
+    -   `data.Language` **[string][17]?** — Order page language `EN` or `RU`
+    -   `data.Cheque` **[object][16]?** — [Cheque][21] to send (optional)
+        -   `data.Cheque.Message` **[number][20]?** — Order description
+        -   `data.Cheque.Positions` **[Array][22]&lt;[object][16]>?** — Order Items
+            -   `data.Cheque.Positions.Quantity` **[number][20]?** — Quantity
+            -   `data.Cheque.Positions.Price` **[number][20]?** — Price in kopeck
+            -   `data.Cheque.Positions.Tax` **[number][20]?** — [Tax system][23] code for item
+            -   `data.Cheque.Positions.Text` **[string][17]?** — Item description
+        -   `data.Cheque.CheckClose` **[string][17]?** 
+            -   `data.Cheque.CheckClose.TaxationSystem` **[number][20]?** — [Tax system][23] code for order
 
-Returns **[Promise][14]&lt;[object][5]>** with `OrderId`, `Amount`, `SessionId`, `PaymentUrl`
+### Examples
+
+```javascript
+api.init({
+  OrderId: OrderId,
+  Amount: 50000,
+  Product: 'ticket',
+  Description: 'MyTestTransaction',
+  Language: 'EN'
+})
+.then(({ SessionId, PaymentUrl }) => {
+  // Somehow send PaymentUrl to user
+})
+.catch((error) => {
+  // ErrorCode in error.message
+})
+```
+
+Returns **[Promise][24]&lt;[object][16]>** — with `{ OrderId, Amount, SessionId, PaymentUrl }`
+
+Returns **[Promise][24]&lt;[Error][25]>** — with [Payture Error Code][26] in message
+
+## status
+
+Check order status.
+
+### Parameters
+
+-   `OrderId` **[string][17]?** — Used in [init][4] order
+
+### Examples
+
+```javascript
+api.status('WqNl4LDHnv5250Ng8zaTQ')
+ .then((res) => {
+   if (res.isPaid) {
+     // Do something
+   }
+ })
+ .catch((error) => {
+   // Payment is ended with error
+ })
+```
+
+Returns **[object][16]** `result`
+
+Returns **[boolean][27]** `result.isPaid` — Parsed order payment status
+
+Returns **[object][16]** `result.raw` — Raw result from Payture
+
+Returns **[Promise][24]&lt;[Error][25]>** — with [Payture Error Code][26] in message
+
+## getWidgetUrl
+
+Create order widget url. Url is used in `<iframe>` `src`.
+
+### Parameters
+
+-   `order` **[object][16]?** — See order description in [init][4]. (optional, default `{}`)
+    -   `order.Domain`   (optional, default `opts.widgetDomain`)
+    -   `order.Key`   (optional, default `opts.merchant`)
+    -   `order.Amount`  
+    -   `order.Product`  
+    -   `order.Cheque`  
+    -   `order.Session`  
+    -   `order.rest` **...any** 
+
+### Examples
+
+```javascript
+const widgetSrc = api.getWidgetUrl({
+  Amount: 50000,
+  Product: 'ticket',
+  Description: 'MyTestTransaction',
+  Language: 'EN',
+  Cheque: {
+    Positions: [
+      {
+        Quantity: 1.000,
+        Price: 50000,
+        Tax: 6,
+        Text: 'Test Good'
+      }
+    ],
+    CheckClose: { TaxationSystem: 6 },
+    Message: 'Test Cheque Message'
+  }
+})
+```
+
+```javascript
+<iframe src={widgetSrc} frameBorder={0} onLoad={handleWidgetLoad} />
+```
+
+Returns **[string][17]** — Url to widget page
+
+## widgetStatus
+
+Watch for [widget order status][28].
+Works in browser. Resolves promise if payment is succesful and rejects on error.
+
+### Examples
+
+```javascript
+<iframe src={widgetSrc} frameBorder={0} onLoad={handleWidgetLoad} />
+```
+
+```javascript
+widgetStatus()
+ .then((event) => {
+   // Success: event.data === 'CLOSE_PAYTURE_WIDGET_SUCCESS'
+ })
+ .catch((event) => {
+   // Error: : event.data === 'CLOSE_PAYTURE_WIDGET_ERROR'
+ })
+```
+
+Returns **[Promise][24]** `status`
+
+Returns **[function][29]** `status.cancel` — cancel promise and stop event listener
 
 [1]: #createpaytureapi
 
 [2]: #parameters
 
-[3]: #init
+[3]: #examples
 
-[4]: #parameters-1
+[4]: #init
 
-[5]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+[5]: #parameters-1
 
-[6]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+[6]: #examples-1
 
-[7]: https://payture.com/api#widget-docs_widget-params_
+[7]: #status
 
-[8]: https://payture.com/api#inpay_
+[8]: #parameters-2
 
-[9]: https://payture.com/api#inpay_init_
+[9]: #examples-2
 
-[10]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+[10]: #getwidgeturl
 
-[11]: https://payture.com/api#kassy-fz54_cheque-format-with-payment_
+[11]: #parameters-3
 
-[12]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+[12]: #examples-3
 
-[13]: https://payture.com/api#kassy-fz54_cheque-status_
+[13]: #widgetstatus
 
-[14]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+[14]: #examples-4
+
+[15]: https://payture.com/api#inpay_
+
+[16]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object
+
+[17]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String
+
+[18]: https://payture.com/api#widget-docs_widget-params_
+
+[19]: https://payture.com/api#inpay_init_
+
+[20]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number
+
+[21]: https://payture.com/api#kassy-fz54_cheque-format-with-payment_
+
+[22]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array
+
+[23]: https://payture.com/api#kassy-fz54_cheque-status_
+
+[24]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Promise
+
+[25]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Error
+
+[26]: https://payture.com/api#error-codes_
+
+[27]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Boolean
+
+[28]: https://payture.com/api#widget-docs_workflow_
+
+[29]: https://developer.mozilla.org/docs/Web/JavaScript/Reference/Statements/function
