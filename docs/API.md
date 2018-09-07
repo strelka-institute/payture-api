@@ -217,8 +217,7 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const paytureApi = require('@strelka/payture-api')()
 
-app.use(bodyParser.json())
-app.use('/payture/notification', (req, res) => {
+app.use('/payture/notification', bodyParser.urlencoded(), (req, res) => {
   paytureApi.serverNotification(req.body)
    .then((data) => {
      // Payment successful
