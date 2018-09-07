@@ -121,8 +121,9 @@ const paytureApi = (opts) => {
  * // api.init(data)
  * // api.status(OrderId)
  * // api.pay(SessionId)
- * // api.widget(data)
- * // api.notificationStatus(res.body)
+ * // api.getWidgetUrl(data)
+ * // api.widgetStatus()
+ * // api.serverNotification(res.body)
  */
 
 const createPaytureApi = (options) => {
