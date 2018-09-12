@@ -19,7 +19,6 @@ const DEFAULT_OPTIONS = {
   host: SANDBOX_HOST,
   merchant: 'Merchant',
   returnUrl: 'http://example.com?orderid={orderid}&result={success}',
-  chequeContactEmail: 'web@example.com',
   widgetHost: WIDGET_HOST,
   widgetDomain: 2
 }

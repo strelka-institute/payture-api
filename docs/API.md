@@ -32,7 +32,6 @@ Create Payture InPay API.
     -   `options.host` **[string][20]** — Host of your payture account (optional, default `https://sandbox.payture.com`)
     -   `options.merchant` **[string][20]** — Your merchant account (optional, default `Merchant`)
     -   `options.returnUrl` **[string][20]?** — Url to return visitors after payment complete
-    -   `options.chequeContactEmail` **[string][20]?** — Contact email for cheques
     -   `options.widgetHost` **[string][20]** — Payture widget template host (optional, default `https://merchantgateway.payture.com`)
     -   `options.widgetDomain` **[string][20]** — [Widget domain][21] (use `1` for production) (optional, default `2`)
 
@@ -45,7 +44,6 @@ const api = createPaytureApi({
   host: 'https://sandbox.payture.com',
   merchant: 'Merchant',
   returnUrl: 'http://example.com?orderid={orderid}&result={success}',
-  chequeContactEmail: 'billing@example.com',
   widgetDomain: 1
 })
 

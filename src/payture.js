@@ -101,7 +101,6 @@ const paytureApi = (opts) => {
  * @param {string} [options.host=https://sandbox.payture.com] — Host of your payture account
  * @param {string} [options.merchant=Merchant] — Your merchant account
  * @param {string} [options.returnUrl] — Url to return visitors after payment complete
- * @param {string} [options.chequeContactEmail] — Contact email for cheques
  * @param {string} [options.widgetHost=https://merchantgateway.payture.com] — Payture widget template host
  * @param {string} [options.widgetDomain=2] — [Widget domain](https://payture.com/api#widget-docs_widget-params_) (use `1` for production)
  *
@@ -114,7 +113,6 @@ const paytureApi = (opts) => {
  *   host: 'https://sandbox.payture.com',
  *   merchant: 'Merchant',
  *   returnUrl: 'http://example.com?orderid={orderid}&result={success}',
- *   chequeContactEmail: 'billing@example.com',
  *   widgetDomain: 1
  * })
  *
@@ -272,10 +270,7 @@ const createPaytureApi = (options) => {
     product: Product,
     session: Session,
     customParams: rest == null ? null : json(rest),
-    chequeParams: Cheque == null ? null : json({
-      CustomerContact: opts.chequeContactEmail,
-      ...Cheque
-    })
+    chequeParams: Cheque == null ? null : json(Cheque)
   })}`
 
   /**
