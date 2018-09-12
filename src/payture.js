@@ -175,6 +175,7 @@ const createPaytureApi = (options) => {
         OrderId,
         Amount,
         Product, // Displayed in form
+        Language: Language == null ? null : Language.toUpperCase(),
         Total: Total == null ? Amount / 100 : Total, // Displayed in form
         ...rest,
         ...Cheque != null && {
