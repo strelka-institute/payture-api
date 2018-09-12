@@ -65,10 +65,6 @@ Start [Payture InPay][22] session.
 
 -   `data` **[object][19]?**  (optional, default `{}`)
     -   `data.OrderId` **([string][20] \| [number][23])?** — Unique order id
-    -   `data.Amount` **([string][20] \| [number][23])?** — Total price in kopeck (`1000` is `10.00₽`)
-    -   `data.Product` **[string][20]?** — Product name (visible to user)
-    -   `data.Description` **[string][20]?** — Order description
-    -   `data.Language` **[string][20]?** — Order page language `EN` or `RU`
     -   `data.Cheque` **[object][19]?** — [Cheque][24] to send (optional)
         -   `data.Cheque.Message` **[number][23]?** — Order description
         -   `data.Cheque.Positions` **[Array][25]&lt;[object][19]>?** — Order Items
@@ -78,6 +74,12 @@ Start [Payture InPay][22] session.
             -   `data.Cheque.Positions.Text` **[string][20]?** — Item description
         -   `data.Cheque.CheckClose` **[string][20]?** 
             -   `data.Cheque.CheckClose.TaxationSystem` **[number][23]?** — [Tax system][26] code for order
+    -   `data.Amount` **([string][20] \| [number][23])?** — Total price in kopeck (`1000` is `10.00₽`)
+    -   `data.Total` **[string][20]?** — Price (visible to user)
+    -   `data.Product` **[string][20]?** — Product name (visible to user)
+    -   `data.Language` **[string][20]?** — Order page language `EN` or `RU`
+    -   `data.Description` **[string][20]?** — Order description
+    -   `data.rest` **...any** 
 
 ### Examples
 

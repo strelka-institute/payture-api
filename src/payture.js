@@ -10,6 +10,7 @@ const {
 
 const {
   IS_SERVER,
+  SUCCESS_NOTIFICATIONS,
   WIDGET_SUCCESS,
   WIDGET_ERROR,
   DEFAULT_OPTIONS,
@@ -36,16 +37,6 @@ const paytureApi = (opts) => {
 
   api.interceptors.request.use((config) => {
     if (config.method === 'post') {
-      if (config.data.Data) {
-        return {
-          ...config,
-          data: serialize({
-            Key: options.merchant,
-            Data: serialize(config.data.Data, '; ')
-          })
-        }
-      }
-
       return {
         ...config,
         data: serialize(config.data)
@@ -135,6 +126,7 @@ const createPaytureApi = (options) => {
    * @param {string|number} [data.OrderId] — Unique order id
    * @param {string|number} [data.Amount] — Total price in kopeck (`1000` is `10.00₽`)
    * @param {string} [data.Product] — Product name (visible to user)
+   * @param {string} [data.Total] — Price (visible to user)
    * @param {string} [data.Description] — Order description
    * @param {string} [data.Language] — Order page language `EN` or `RU`
    * @param {object} [data.Cheque] — [Cheque](https://payture.com/api#kassy-fz54_cheque-format-with-payment_) to send (optional)
@@ -166,19 +158,29 @@ const createPaytureApi = (options) => {
    * })
    */
 
-  const init = (data = {}) =>
+  const init = ({
+    OrderId,
+    Cheque,
+    Amount,
+    Total,
+    Product,
+    Language,
+    ...rest
+  } = {}) =>
     api.post(ROUTE_INIT, {
-      Data: {
+      Key: opts.merchant,
+      Data: serialize({
         SessionType: 'Pay',
         Url: opts.returnUrl,
-        ...data,
-        ...data.Cheque != null && {
-          Cheque: encodeBase64(json({
-            CustomerContact: opts.chequeContactEmail,
-            ...data.Cheque
-          }))
+        OrderId,
+        Amount,
+        Product, // Displayed in form
+        Total: Total == null ? Amount / 100 : Total, // Displayed in form
+        ...rest,
+        ...Cheque != null && {
+          Cheque: encodeBase64(json(Cheque))
         }
-      }
+      }, '; ')
     }).then((res) => ({
       OrderId: res.OrderId,
       Amount: res.Amount,
@@ -353,16 +355,23 @@ const createPaytureApi = (options) => {
    */
 
   const serverNotification = (data = {}) => {
-    const nextData = {
+    if (isError(data)) {
+      const error = new Error(data.ErrCode)
+      error.data = data
+
+      return Promise.reject(error)
+    }
+
+    if (SUCCESS_NOTIFICATIONS.indexOf(data.Notification) === -1) {
+      const error = new Error(data.Notification)
+      error.data = data
+      return Promise.reject(error)
+    }
+
+    return Promise.resolve({
       TransactionDate: new Date(data.TransactionDate),
       ...data
-    }
-
-    if (isError(nextData)) {
-      return Promise.reject(new Error(nextData.ErrCode))
-    }
-
-    return Promise.resolve(nextData)
+    })
   }
 
   return {

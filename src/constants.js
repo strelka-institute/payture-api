@@ -15,6 +15,13 @@ const WIDGET_HOST = 'https://merchantgateway.payture.com'
 const WIDGET_SUCCESS = 'CLOSE_PAYTURE_WIDGET_SUCCESS'
 const WIDGET_ERROR = 'CLOSE_PAYTURE_WIDGET_ERROR'
 
+const SUCCESS_NOTIFICATIONS = [
+  'MerchantPay',
+  'EngineBlockSuccess',
+  'EngineChargeSuccess',
+  'EnginePaySuccess'
+]
+
 const DEFAULT_OPTIONS = {
   host: SANDBOX_HOST,
   merchant: 'Merchant',
@@ -29,6 +36,7 @@ module.exports = {
   SANDBOX_HOST,
   SUCCESS_TRUE,
   SUCCESS_FALSE,
+  SUCCESS_NOTIFICATIONS,
   ERROR_CODE_NONE,
   ROUTE_INIT,
   ROUTE_PAY,
